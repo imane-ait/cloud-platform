@@ -1,13 +1,13 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlalchemy import text
-from app.database import engine, Base
+from app.database import engine
 from app.routers import vehicles, drivers
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+#    async with engine.begin() as conn:
+#        await conn.run_sync(Base.metadata.create_all)
     yield
 
 app = FastAPI(title="FleetOps API", lifespan=lifespan)
