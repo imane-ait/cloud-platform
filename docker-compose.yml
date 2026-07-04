@@ -15,5 +15,17 @@ services:
       timeout: 5s
       retries: 5
 
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://fleetops:fleetops@db:5432/fleetops
+      APP_ENV: development
+      SECRET_KEY: changeme
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   postgres_data:
