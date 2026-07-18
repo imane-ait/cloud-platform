@@ -1,0 +1,21 @@
+replicaCount: 3
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 60
+
+env:
+  APP_ENV: production
+
+ingress:
+  host: fleetops.example.com
