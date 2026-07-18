@@ -18,3 +18,23 @@ module "vpc" {
     3
   )
 }
+
+module "eks" {
+  source = "./modules/eks"
+
+  project            = var.project
+  environment        = var.environment
+  vpc_id             = module.vpc.vpc_id
+  private_subnet_ids = module.vpc.private_subnet_ids
+}
+
+module "rds" {
+  source = "./modules/rds"
+
+  project               = var.project
+  environment           = var.environment
+  vpc_id                = module.vpc.vpc_id
+  private_subnet_ids    = module.vpc.private_subnet_ids
+  db_password           = var.db_password
+  eks_security_group_id = module.eks.eks_security_group_id
+}
