@@ -1,0 +1,68 @@
+name: CD
+
+on:
+  push:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+jobs:
+  deploy-dev:
+    name: Deploy to Dev
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: dev
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --name fleetops-dev \
+            --region us-east-1
+
+      - name: Deploy with Helm
+        run: |
+          helm upgrade --install fleetops ./helm/fleetops \
+            -f helm/fleetops/values-dev.yaml \
+            --set image.tag=${{ github.sha }} \
+            --wait \
+            --timeout 5m
+
+  deploy-prod:
+    name: Deploy to Prod
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    environment: prod
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --name fleetops-prod \
+            --region us-east-1
+
+      - name: Deploy with Helm
+        run: |
+          helm upgrade --install fleetops ./helm/fleetops \
+            -f helm/fleetops/values-prod.yaml \
+            --set image.tag=${{ github.ref_name }} \
+            --wait \
+            --timeout 10m
