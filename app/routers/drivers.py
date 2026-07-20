@@ -7,6 +7,7 @@ from app.schemas.driver import DriverCreate, DriverRead
 
 router = APIRouter(prefix="/drivers", tags=["drivers"])
 
+
 @router.post("/", response_model=DriverRead, status_code=201)
 async def create_driver(payload: DriverCreate, db: AsyncSession = Depends(get_db)):
     driver = Driver(**payload.model_dump())
@@ -15,10 +16,12 @@ async def create_driver(payload: DriverCreate, db: AsyncSession = Depends(get_db
     await db.refresh(driver)
     return driver
 
+
 @router.get("/", response_model=list[DriverRead])
 async def list_drivers(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Driver))
     return result.scalars().all()
+
 
 @router.get("/{driver_id}", response_model=DriverRead)
 async def get_driver(driver_id: int, db: AsyncSession = Depends(get_db)):
@@ -26,6 +29,7 @@ async def get_driver(driver_id: int, db: AsyncSession = Depends(get_db)):
     if not driver:
         raise HTTPException(status_code=404, detail="Driver not found")
     return driver
+
 
 @router.delete("/{driver_id}", status_code=204)
 async def delete_driver(driver_id: int, db: AsyncSession = Depends(get_db)):
