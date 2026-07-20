@@ -2,6 +2,7 @@ from sqlalchemy import String, Integer, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
 
+
 class Driver(Base):
     __tablename__ = "drivers"
 
