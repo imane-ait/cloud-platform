@@ -1,18 +1,22 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from sqlalchemy import text
 from app.database import engine
 from app.routers import vehicles, drivers
+from prometheus_fastapi_instrumentator import Instrumentator
+
+instrumentator = Instrumentator()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    #    async with engine.begin() as conn:
-    #        await conn.run_sync(Base.metadata.create_all)
+    instrumentator.expose(app)
     yield
 
 
 app = FastAPI(title="FleetOps API", lifespan=lifespan)
+
+instrumentator.instrument(app)
 
 app.include_router(vehicles.router)
 app.include_router(drivers.router)
@@ -30,6 +34,4 @@ async def ready():
             await conn.execute(text("SELECT 1"))
         return {"status": "ready", "db": "ok"}
     except Exception as e:
-        from fastapi import Response
-
         return Response(status_code=503, content=str(e))
