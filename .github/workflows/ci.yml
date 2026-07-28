@@ -93,7 +93,53 @@ jobs:
             --ignore-vuln PYSEC-2026-2281 \
             --ignore-vuln PYSEC-2026-2280 \
             --ignore-vuln PYSEC-2026-1845
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  trivy:
+    name: Trivy Image Scan
+    runs-on: ubuntu-latest
+    needs: [test, security]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image for scanning
+        run: docker build -t fleetops:scan .
+
+      - name: Run Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: fleetops:scan
+          format: table
+          exit-code: '0'
+          severity: HIGH,CRITICAL
+
+  sbom:
+    name: Generate SBOM
+    runs-on: ubuntu-latest
+    needs: [test, security]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t fleetops:sbom .
+
+      - name: Generate SBOM with syft
+        uses: anchore/sbom-action@v0
+        with:
+          image: fleetops:sbom
+          artifact-name: fleetops-sbom.spdx
+          output-file: fleetops-sbom.spdx
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: fleetops-sbom
+          path: fleetops-sbom.spdx
   build:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
