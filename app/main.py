@@ -1,9 +1,11 @@
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Response
-from sqlalchemy import text
-from app.database import engine
-from app.routers import vehicles, drivers
 from prometheus_fastapi_instrumentator import Instrumentator
+from sqlalchemy import text
+
+from app.database import engine
+from app.routers import drivers, vehicles
 
 instrumentator = Instrumentator()
 
